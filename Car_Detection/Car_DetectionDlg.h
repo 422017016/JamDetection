@@ -129,4 +129,5 @@ public:
 	int m_NumOfPic_num_true;
 	int m_NumOfPic_num_false;
 	int m_NumOfPic_num;
+	int m_NumOfPic_nums[4];//recall和precise中的abcd <实拥-检拥><实不拥-检拥><实拥-检不拥><实不拥-检不拥>
 };

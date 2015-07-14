@@ -355,12 +355,11 @@ LRESULT CCar_DetectionDlg::OnGaugeClick(WPARAM wp, LPARAM /*lp*/)
 					int IndexTemp=m_PrimePicture_Route.Find('(');
 					m_PrimePicture_Route_SubNum=m_PrimePicture_Route.Left(IndexTemp);
 					//获得图片的格式
-					CString InsideSubNum=m_PrimePicture_Route.Right(m_PrimePicture_Route.GetLength()-IndexTemp);
+					CString InsideSubNum=m_PrimePicture_Route.Right(m_PrimePicture_Route.GetLength()-IndexTemp-1);
 					IndexTemp=InsideSubNum.Find(')');
 					m_PrimePicture_Route_Format=InsideSubNum.Right(InsideSubNum.GetLength()-IndexTemp-1);
 					//获得图片的ID——int格式
 					InsideSubNum=InsideSubNum.Left(IndexTemp);
-					InsideSubNum=InsideSubNum.Right(1);
 					m_PrimePicture_Route_Num=_ttoi(InsideSubNum);
 					//获得相机名字，如果没有规定则标识为DEFAULT
 					CString cam=m_GetStringBy2Sign(m_PrimePicture_Route,'#','#');
@@ -478,6 +477,7 @@ void CCar_DetectionDlg::OnBnClickedBtnallcam()
 	Flag_OfStartAll=true;
 	m_AllRecord_String[1].Empty();//非连续处理前，清空记录1
 
+	for(int i=0;i<4;i++)m_NumOfPic_nums[i]=0;
 	m_NumOfPic_num_true=0;
 	m_NumOfPic_num_false=0;
 	m_NumOfPic_num=0;
@@ -496,9 +496,13 @@ void CCar_DetectionDlg::OnBnClickedBtnallcam()
 	double averagetime=totaltime/m_NumOfPic_num*1000;
 	float correct_rate_all=100*m_NumOfPic_num_true/m_NumOfPic_num;//所有照片的正确率
 	float error_rate_all=100*m_NumOfPic_num_false/m_NumOfPic_num;//所有照片的错误率
+	float precise=100*m_NumOfPic_nums[0]/(m_NumOfPic_nums[0]+m_NumOfPic_nums[2]);
+	float recall=100*m_NumOfPic_nums[0]/(m_NumOfPic_nums[0]+m_NumOfPic_nums[1]);
 
-	m_AllRecord_String[0].Format(L"所有图片判断的正确率为：%f\r\n总处理照片数：%d\r\n判断正确：%d\r\n判断错误：%d",correct_rate_all,m_NumOfPic_num,m_NumOfPic_num_true,m_NumOfPic_num_false);
 	CString str;
+	str.Format(L"所有图片判断的正确率为：%f\r\n总处理照片数：%d\r\n判断正确：%d\r\n判断错误：%d",correct_rate_all,m_NumOfPic_num,m_NumOfPic_num_true,m_NumOfPic_num_false);
+	m_AllRecord_String[0].Format(str+L"\r\npricise<准确率>=%f\r\nrecall<查全率>=%f",precise,recall);
+	
 	str.Format(L"图片总数为：%d\r\n总共处理时间为：%fs\r\n单张平均处理时间为：%fms\r\n\r\n",m_NumOfPic_num,totaltime,averagetime);
 	BCGPMessageBox(L"图片处理结束\r\n"+str);
 	m_AllRecord_String[1]=str+m_AllRecord_String[1];
@@ -519,6 +523,7 @@ void CCar_DetectionDlg::OnBnClickedBtnStartall()
 	m_NumOfPic_num_true=0;
 	m_NumOfPic_num_false=0;
 	m_NumOfPic_num=0;
+	for(int i=0;i<4;i++)m_NumOfPic_nums[i]=0;
 
 	clock_t start,finish;
 	double totaltime;
@@ -533,9 +538,15 @@ void CCar_DetectionDlg::OnBnClickedBtnStartall()
 	
 	float correct_rate_all=100*m_NumOfPic_num_true/m_NumOfPic_num;//所有照片的正确率
 	float error_rate_all=100*m_NumOfPic_num_false/m_NumOfPic_num;//所有照片的错误率
+
+	float precise=100*m_NumOfPic_nums[0]/(m_NumOfPic_nums[0]+m_NumOfPic_nums[2]);
+	float recall=100*m_NumOfPic_nums[0]/(m_NumOfPic_nums[0]+m_NumOfPic_nums[1]);
+
 	
-	m_AllRecord_String[0].Format(L"所有图片判断的正确率为：%f\r\n总处理照片数：%d\r\n判断正确：%d\r\n判断错误：%d",correct_rate_all,m_NumOfPic_num,m_NumOfPic_num_true,m_NumOfPic_num_false);
 	CString str;
+	str.Format(L"所有图片判断的正确率为：%f\r\n总处理照片数：%d\r\n判断正确：%d\r\n判断错误：%d",correct_rate_all,m_NumOfPic_num,m_NumOfPic_num_true,m_NumOfPic_num_false);
+	m_AllRecord_String[0].Format(str+L"\r\npricise<准确率>=%f\r\nrecall<查全率>=%f",precise,recall);
+
 	str.Format(L"图片总数为：%d\r\n总共处理时间为：%fs\r\n单张平均处理时间为：%fms\r\n\r\n",m_NumOfPic_num,totaltime,averagetime);
 	BCGPMessageBox(L"图片处理结束\r\n"+str);
 	m_AllRecord_String[1]=str+m_AllRecord_String[1];
@@ -747,11 +758,13 @@ Mat CCar_DetectionDlg::m_projection_transfer(Mat src)
 		CString str;
 		if(JamFlag==0)//实际不拥堵——判断错误
 		{
+			m_NumOfPic_nums[1]++;
 			m_NumOfPic_num_false++;
 			str.Format(m_PrimePicture_CAMName+L"\tID:%d判断为拥堵！ 错误\r\n",m_PrimePicture_Route_Num-1);
 		}
 		else if(JamFlag==1)//实际拥堵——判断正确
 		{
+			m_NumOfPic_nums[0]++;
 			m_NumOfPic_num_true++;
 			str.Format(m_PrimePicture_CAMName+L"\tID:%d判断为拥堵！ 正确\r\n",m_PrimePicture_Route_Num-1);
 		}
@@ -763,6 +776,7 @@ Mat CCar_DetectionDlg::m_projection_transfer(Mat src)
 		CString str;
 		if(JamFlag==0)//实际不拥堵——判断正确（不进行记录）
 		{
+			m_NumOfPic_nums[3]++;
 			m_NumOfPic_num_true++;
 			if(!Flag_OfStartAll)//非连续处理时记录
 			{
@@ -771,6 +785,7 @@ Mat CCar_DetectionDlg::m_projection_transfer(Mat src)
 		}
 		else if(JamFlag==1)//实际拥堵——判断错误
 		{
+			m_NumOfPic_nums[2]++;
 			m_NumOfPic_num_false++;
 			str.Format(m_PrimePicture_CAMName+L"\tID:%d判断为不拥堵！ 错误\r\n",m_PrimePicture_Route_Num-1);
 		}

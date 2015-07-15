@@ -54,7 +54,7 @@ CString m_AllPara_String[M_NUMOFPARA]={//要设置的参数提示
 	"拥塞判断百分比阈值"
 };
 int m_AllPara_Int[M_NUMOFPARA];//设置参数的值
-int m_AllPara_Int_Default[M_NUMOFPARA]={20,40,70};//{7,3,15,30,50,5,20,40,70};
+int m_AllPara_Int_Default[M_NUMOFPARA]={20,30,90};//{7,3,15,30,50,5,20,40,70};
 
 #define M_NUMOFRECORD 2
 CString m_AllRecord_String[M_NUMOFRECORD];//要记录的参数
@@ -539,13 +539,11 @@ void CCar_DetectionDlg::OnBnClickedBtnStartall()
 	float correct_rate_all=100*m_NumOfPic_num_true/m_NumOfPic_num;//所有照片的正确率
 	float error_rate_all=100*m_NumOfPic_num_false/m_NumOfPic_num;//所有照片的错误率
 
-	float precise=100*m_NumOfPic_nums[0]/(m_NumOfPic_nums[0]+m_NumOfPic_nums[2]);
-	float recall=100*m_NumOfPic_nums[0]/(m_NumOfPic_nums[0]+m_NumOfPic_nums[1]);
 
 	
 	CString str;
-	str.Format(L"所有图片判断的正确率为：%f\r\n总处理照片数：%d\r\n判断正确：%d\r\n判断错误：%d",correct_rate_all,m_NumOfPic_num,m_NumOfPic_num_true,m_NumOfPic_num_false);
-	m_AllRecord_String[0].Format(str+L"\r\npricise<准确率>=%f\r\nrecall<查全率>=%f",precise,recall);
+	m_AllRecord_String[0].Format(L"所有图片判断的正确率为：%f\r\n总处理照片数：%d\r\n判断正确：%d\r\n判断错误：%d",correct_rate_all,m_NumOfPic_num,m_NumOfPic_num_true,m_NumOfPic_num_false);
+	//m_AllRecord_String[0].Format(str+L"\r\npricise<准确率>=%f\r\nrecall<查全率>=%f",precise,recall);
 
 	str.Format(L"图片总数为：%d\r\n总共处理时间为：%fs\r\n单张平均处理时间为：%fms\r\n\r\n",m_NumOfPic_num,totaltime,averagetime);
 	BCGPMessageBox(L"图片处理结束\r\n"+str);
@@ -657,7 +655,8 @@ Mat CCar_DetectionDlg::Picture_CANNY_ROAD(Mat src)
 	//imshow("perspective_Mat",perspective_Mat);
 	
 	GaussianBlur(perspective_Mat, gaussblur, Size(BlurBlob,BlurBlob), Sigma/10, Sigma/10);
-	imshow("GaussianBlur",gaussblur);
+	if(!Flag_OfStartAll)//单张处理时显示
+		imshow("GaussianBlur",gaussblur);
 
 	Canny(gaussblur, edges, ThresholdLow, ThresholdHigh, EdgesBlob);
 	//边界进行预处理

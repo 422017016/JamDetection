@@ -692,6 +692,7 @@ Mat CCar_DetectionDlg::m_projection_transfer(Mat src)
 	int line_num_value=0;//有效线的条数
 
 	int f_fliter=road_num;//m_trans_Rect_Width/(road_num*car_road);
+	int f_fliter_col=20;
 	
 
 	for(int row=0;row<m_trans_Rect_Height;row++)
@@ -723,6 +724,7 @@ Mat CCar_DetectionDlg::m_projection_transfer(Mat src)
 				if(projection.at<unsigned char>(Point(x+m_trans_Rect_Width,f_row))!=255)
 				{
 					projection.at<unsigned char>(Point(x+m_trans_Rect_Width,f_row))=255;//过滤过的图
+					//projection.at<unsigned char>(Point(x,f_row))=255;//过滤过的图
 					val_point.x++;
 				}				
 			}
@@ -746,6 +748,20 @@ Mat CCar_DetectionDlg::m_projection_transfer(Mat src)
 			val_point=Point(0,0);//清零
 		}		
 	}
+	for(int col=0;col<m_trans_Rect_Width;col++)
+	{
+		int f_mid=col/f_fliter_col;
+		int f_col=f_mid*f_fliter_col;//集结的列
+
+		for(int row=0;row<m_trans_Rect_Height;row++)
+		{//扫描到下边为止
+			if(projection.at<unsigned char>(Point(col,row))==255)
+			{
+				projection.at<unsigned char>(Point(f_col+m_trans_Rect_Width,row))=255;//过滤过的图	
+			}
+		}	
+	}
+
 	cv::line(projection,Point(m_trans_Rect_Width,0),Point(m_trans_Rect_Width,m_trans_Rect_Height-1),Scalar::all(255));
 	cv::line(projection,Point(2*m_trans_Rect_Width,0),Point(2*m_trans_Rect_Width,m_trans_Rect_Height-1),Scalar::all(255));
 	cv::line(projection,Point(2*m_trans_Rect_Width+threshold_single,0),Point(2*m_trans_Rect_Width+threshold_single,m_trans_Rect_Height-1),Scalar::all(100));
